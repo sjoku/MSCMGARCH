@@ -1,5 +1,9 @@
 # MSCMGARCH
 
+## Disclaimer
+
+This repository is a fork of the original repo ``MJFullness/MSCMGARCH``. The intention of this repo is to expand on the documentation and working reproducible examples, aligned to the original paper. 
+
 ## Introduction
 
 The MSCMGARCH package provides a Markov-switching multivariate GARCH model with copula-distributed innovations. It allows for the dynamic assessment of financial market interdependencies, capturing potential regime shifts in asymmetric tail dependence structures among volatility innovations in speculative return series.
