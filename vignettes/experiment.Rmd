@@ -1,0 +1,53 @@
+---
+title: "Experiment Reproduction for MSCMGARCH"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Introduction
+
+This vignette reproduces an experiment detailed in the paper "Markov-Switching Multivariate GARCH Model with Copula-Distributed Innovations". The experiment demonstrates the effectiveness of the Markov-switching model in uncovering shifts in tail dependence patterns in financial return series.
+
+## Data Description
+
+The data used in this experiment consists of log-returns of the NASDAQ Composite and Bitcoin. The data spans from January 1, 2015, to December 31, 2020, and is obtained from Yahoo Finance.
+
+## Experiment Code
+
+Here is the code used to run the experiment:
+
+```r
+# Load necessary libraries
+library(MSCMGARCH)
+library(quantmod)
+
+# Load data
+getSymbols(c("^IXIC", "BTC-USD"), from = "2015-01-01", to = "2020-12-31")
+nasdaq <- dailyReturn(Cl(IXIC))
+bitcoin <- dailyReturn(Cl(`BTC-USD`))
+
+# Combine data into a single data frame
+data <- merge(nasdaq, bitcoin)
+colnames(data) <- c("NASDAQ", "Bitcoin")
+
+# Estimate model parameters
+estimation <- MLE_MSCMGARCH(r = data, type = "Normal Gumbel", nc = 1)
+
+# Perform rolling window analysis
+forecast <- rolling_window(series = data, type = "MS_CMGARCH", copula_type = c(4, 4, 4), asymmetric = FALSE, window_length = 250, portfolio_weights = c(0.5, 0.5), signs = NULL, nc = 1)
+```
+
+## Interpreting the Results
+
+### Estimated Model Parameters
+
+The `MLE_MSCMGARCH` function estimates the model parameters using maximum likelihood estimation. The output is a list containing the estimated parameters and other relevant information.
+
+### Rolling Window Analysis
+
+The `rolling_window` function performs rolling window analysis for forecasting. The output is a list of forecasted values based on the specified parameters and window length.
+
+## Conclusions
+
+The experiment demonstrates that the Markov-switching model effectively uncovers shifts in tail dependence patterns in the log-returns of the NASDAQ Composite and Bitcoin. The results indicate that the returns of both assets become increasingly intertwined during market downturns, exposing them to large, simultaneous negative shocks and amplifying the risk of severe joint declines. This suggests that, rather than providing diversification benefits, Bitcoin may exacerbate losses during periods of crisis.

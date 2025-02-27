@@ -1,13 +1,15 @@
 Package: MSCMGARCH
 Type: Package
-Title: What the package does (short line)
+Title: Markov-Switching Multivariate GARCH Model with Copula-Distributed Innovations
 Version: 1.0
 Date: 2021-06-26
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Author: John Doe
+Maintainer: John Doe <johndoe@example.com>
+Description: This package provides a Markov-switching multivariate GARCH model with copula-distributed innovations. It allows for the dynamic assessment of financial market interdependencies, capturing potential regime shifts in asymmetric tail dependence structures among volatility innovations in speculative return series.
 License: What license is it under?
 Depends: R (>= 3.5.0), BEKKs, parallel, future
 Imports: Rcpp (>= 1.0.6), parallel, pbapply, VineCopula, stats4, BEKKs, mvtnorm, optimParallel, rvinecopulib,future.apply,RcppParallel, cubature, calculus
 LinkingTo: Rcpp, RcppArmadillo, Rcpp11
 RoxygenNote: 7.1.2
+VignetteBuilder: knitr
+Suggests: knitr, rmarkdown
