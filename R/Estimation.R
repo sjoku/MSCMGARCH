@@ -1,14 +1,4 @@
 #Estimation functions
-
-# Function to estimate the parameters of the MSCMGARCH model
-# Arguments:
-#   r: A matrix of return series
-#   type: A string specifying the copula type
-#   start_val: Initial values for the parameters (optional)
-#   BEKK1: Initial values for the BEKK parameters (optional)
-#   nc: Number of cores for parallel computation
-# Returns:
-#   A list containing the BEKK parameters and the estimated parameters
 MLE_MSCMGARCH<-function(r, type, start_val=NULL, BEKK1=NULL,nc){
   if(ncol(r)>2){
     return("Wrong dimensions, series must be of dimension 2 \n")
@@ -504,22 +494,13 @@ if(type=="Normal GumbelSurvival ClaytonSurvival")  {
 
 }
 
-# Function to estimate the parameters of the MSCMGARCH model for 3-dimensional data
-# Arguments:
-#   r: A matrix of return series
-#   type: A string specifying the copula type
-#   start_val: Initial values for the parameters (optional)
-#   BEKK: Initial values for the BEKK parameters (optional)
-#   asymmBEKK: A boolean indicating whether to use asymmetric BEKK
-#   signs: A matrix of signs for the asymmetric BEKK (optional)
-#   nc: Number of cores for parallel computation
-# Returns:
-#   A list containing the BEKK parameters and the estimated parameters
 MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,signs=NULL,nc){
   if(ncol(r)!=3){
     return("Wrong dimensions, series must be of dimension 3 \n")
   }
   if(nrow(type)==3){
+  
+    
   
    if(asymmBEKK==FALSE){
       #claculate BEKK
@@ -529,6 +510,8 @@ MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,
       
       BEKK=BEKK1$theta
      }
+  
+  
   
     if(is.null(start_val)){
       set.seed(456)
@@ -569,6 +552,9 @@ MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,
     
     return(list(BEKK,result,Filter_Prob))
     
+  
+  
+  
    }
     if(asymmBEKK==TRUE){
       #claculate BEKK
@@ -623,6 +609,8 @@ MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,
   }
   else if(nrow(type)==6){
     
+      
+      
       if(asymmBEKK==FALSE){
         #claculate BEKK
         if(is.null(BEKK)){
@@ -631,6 +619,8 @@ MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,
         
         BEKK=BEKK1$theta
         }
+        
+        
         
         if(is.null(start_val)){
          
@@ -684,6 +674,9 @@ MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,
         Filter_Prob=FilterProbs_Normal_Copula_Copula_3(BEKK,result$par,r,type)
         
         return(list(BEKK,result,Filter_Prob))
+        
+        
+        
         
       }
       if(asymmBEKK==TRUE){
@@ -749,16 +742,7 @@ MLE_MSCMGARCH_3dim<-function(r, type, start_val=NULL, BEKK=NULL,asymmBEKK=FALSE,
       }
     }
 }
-
-# Function to estimate the parameters of the CMGARCH model
-# Arguments:
-#   r: A matrix of return series
-#   type: A string specifying the copula type
-#   start_val: Initial values for the parameters
-#   signs: A matrix of signs for the asymmetric BEKK (optional)
-#   hessian: A boolean indicating whether to compute the Hessian matrix
-# Returns:
-#   The estimated parameters
+}
 MLE_CMGARCH<-function(r, type, start_val,signs=NULL, hessian=T){
   if(!is.numeric(type)){
   if(type=="Gumbel"){
@@ -804,4 +788,6 @@ MLE_CMGARCH<-function(r, type, start_val,signs=NULL, hessian=T){
     return(res)
   }
   
-}
+  
+  
+}  
