@@ -10,14 +10,14 @@ The MSCMGARCH package provides a Markov-switching multivariate GARCH model with 
 
 ## Installation
 
-To install the MSCMGARCH package, you can use the following commands in R:
+To install the MSCMGARCH package, you can use the following commands in R. Note, that ``RTools`` are needed in order to compile the package locally. 
 
 ```R
-# Install the devtools package if you don't have it already
-install.packages("devtools")
+# Install the remotes package if you don't have it already
+install.packages("remotes")
 
 # Install the MSCMGARCH package from GitHub
-devtools::install_github("nutle/MSCMGARCH")
+remotes::install_github("sjoku/MSCMGARCH")
 ```
 
 ## Quickstart Guide
