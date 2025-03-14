@@ -18,6 +18,28 @@
 # 
 
 
+#' @title Compute BEKK Conditional Covariance Matrices
+#' @description Computes a sequence of conditional covariance matrices using the BEKK model specification.
+#' @param C Lower triangular matrix representing the constant term in the BEKK model.
+#' @param A Matrix of ARCH parameters in the BEKK model.
+#' @param G Matrix of GARCH parameters in the BEKK model.
+#' @param data Matrix of time series data where rows are observations and columns are variables.
+#' @return A list containing the conditional covariance matrices for each time point.
+#' @details This function implements the BEKK(1,1) recursion formula:
+#'          H_t = CC' + A'(r_{t-1}r_{t-1}')A + G'H_{t-1}G
+#'          where the Gt term appears to be missing from the current implementation.
+#' @examples
+#' # Generate some random bivariate data
+#' set.seed(123)
+#' data <- matrix(rnorm(200), ncol = 2)
+#' 
+#' # Define BEKK parameters
+#' C <- matrix(c(0.2, 0, 0.1, 0.3), ncol = 2)  # Lower triangular
+#' A <- matrix(c(0.3, 0.05, 0.05, 0.3), ncol = 2)
+#' G <- matrix(c(0.8, 0.02, 0.02, 0.8), ncol = 2)
+#' 
+#' # Compute conditional covariance matrices
+#' H_list <- comph_bekk(C, A, G, data)
 comph_bekk <- function(C, A, G, data) {
   # dimensions
   n      = nrow(data)
@@ -48,7 +70,51 @@ comph_bekk <- function(C, A, G, data) {
 
 
 
-
+#' Generate Simulated Time Series Data for Various Markov-Switching Copula Models
+#'
+#' This function generates simulated bivariate time series data based on specified Markov-switching copula models combined optionally with a BEKK multivariate GARCH process. Supported types include "Clayton Gumbel BEKK", "Normal Gumbel BEKK", "Clayton Gumbel Survival BEKK", "Clayton Gumbel", "Normal Gumbel", and "Clayton Gumbel Survival".
+#'
+#' @param type A character string specifying the type of Markov-switching copula model to simulate. Implemented options:
+#'   - "Clayton Gumbel BEKK"
+#'   - "Normal Gumbel BEKK"
+#'   - "Clayton Gumbel Survival BEKK"
+#'   - "Clayton Gumbel"
+#'   - "Normal Gumbel"
+#'   - "Clayton Gumbel Survival"
+#' @param n Integer specifying the desired length of the time series to simulate.
+#' @param par Numeric vector containing all necessary parameters for simulation:
+#'   - For BEKK models ("Clayton Gumbel BEKK", "Normal Gumbel BEKK", "Clayton Gumbel Survival BEKK"), `par` includes:
+#'     - 11 BEKK parameters (elements for matrices C, A, and G)
+#'     - 2 transition probabilities (p and q)
+#'     - Copula parameters (Clayton, Gumbel, or Survival, depending on type)
+#'   - For non-BEKK models ("Clayton Gumbel", "Normal Gumbel", "Clayton Gumbel Survival"), `par` includes:
+#'     - 2 transition probabilities (p and q)
+#'     - Copula parameters (Clayton, Gumbel, or Survival)
+#'
+#' @return A list containing two unnamed elements:
+#'   - First element: Numeric matrix of simulated time series data (dimension: n x 2)
+#'   - Second element: Numeric vector indicating the Markov-switching regime (0 or 1) at each time point
+#'
+#' @examples
+#' \dontrun{
+#' type <- "Clayton Gumbel BEKK"
+#' n <- 1000
+#' true_par <- c(0.05, 0.01, 0.03, 0.1, 0.05, 0.05, 0.1, 0.8, 0.05, 0.05, 0.8,
+#'               0.8, 0.2, 2, 3)
+#'
+#' simulated_data <- example_Creator(type, n, true_par)
+#'
+#' # Visualizing the first few rows of simulated series
+#' head(simulated_data[[1]])
+#'
+#' # Visualizing state regimes
+#' plot(simulated_data[[2]], type='l', main='Regime states', ylab='State',
+#'      xlab='Time', col='blue')
+#' }
+#'
+#' @importFrom mvtnorm rmvnorm
+#' @importFrom VineCopula BiCopSim
+#' @export
 example_Creator<-function(type,n, par){
    if(type == "Clayton Gumbel BEKK"){
   series=rmvnorm(n+200,mean=rep(0,2))
@@ -695,6 +761,60 @@ Filtered_Probabilities<-function(type,par,n,series,j){
     return(Prob)
   }
 }
+
+#' BEKK Parameter Estimation Function
+#'
+#' Estimates BEKK parameters using a combination of random grid search for initial values and the Berndt-Hall-Hall-Hausman (BHHH) optimization algorithm.
+#'
+#' @param r Numeric matrix. The input data (time series) for estimating the BEKK model.
+#' @param init_values Either "random" or a numeric vector of initial parameter values.
+#' @param nc Integer. Number of cores for parallel processing (currently unused, placeholder for future use).
+#' @param max_iter Integer. Maximum number of iterations for the optimization algorithm.
+#' @param crit Numeric. Convergence criterion for stopping optimization.
+#'
+#' @return A list containing:
+#'   - `C0`: Numeric matrix representing the estimated C matrix.
+#'   - `A`: Numeric matrix of estimated A parameters.
+#'   - `G`: Numeric matrix of estimated G parameters.
+#'   - `full_result`: Full output from the optimization function (`bhh_bekk`).
+#'
+#' @examples
+#' \dontrun{
+#' simulated_series <- example_Creator("Clayton Gumbel BEKK", 1000, true_par)
+#' estimated_bekk <- bekk(r=simulated_series[[1]], init_values="random", nc=4)
+#' estimated_C0 <- estimated_bekk$C0
+#' estimated_A <- estimated_bekk$A
+#' estimated_G <- estimated_bekk$G
+#' }
+#'
+#' @export
+bekk <- function(r, init_values = "random", nc = 1, max_iter = 100, crit = 1e-6){
+
+  if (identical(init_values, "random")) {
+    initial_search <- random_grid_search_BEKK(r)
+    theta_init <- initial_search$theta
+  } else if(is.numeric(init_values)){
+    theta_init <- init_values
+  } else {
+    stop("init_values must be 'random' or numeric vector of initial parameters")
+  }
+
+  estimated_params <- bhh_bekk(r = r, theta = theta_init, max_iter = max_iter, crit = crit)
+  estimated_theta <- estimated_params$theta
+
+  d <- ncol(r)
+  num_C_params <- d*(d+1)/2
+  num_A_params <- d^2
+  num_G_params <- d^2
+
+  C0 <- matrix(estimated_theta[1:num_C_params], d, d)
+  A <- matrix(estimated_theta[(num_C_params+1):(num_C_params+num_A_params)], d, d)
+  G <- matrix(estimated_theta[(num_C_params+num_A_params+1):(num_C_params+num_A_params+num_G_params)], d, d)
+
+  return(list(C0=C0, A=A, G=G, full_result=estimated_params))
+}
+
+
 
 Test<-function(type,n,amount,true_par,lower_bound,upper_bound,seed,nc){
   
