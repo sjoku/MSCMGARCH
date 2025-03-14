@@ -263,7 +263,55 @@ u_CMGARCH<- function(portfolio_weights,H,level,type,par,VaR,portfolio_return){
   return(u)
   
 }
-  #two regime model
+
+
+#' Value-at-Risk (VaR) for Two-Regime MSCMGARCH Models
+#'
+#' Calculates the Value-at-Risk (VaR) for a portfolio based on a two-regime Markov-Switching Copula Multivariate GARCH (MSCMGARCH) model. The calculation leverages the BEKK-based conditional covariance matrix, regime-specific copula dependence structures, and regime transition probabilities.
+#'
+#' @param portfolio_weights Numeric vector. Portfolio weights of the 3-dimensional asset portfolio.
+#' @param H Numeric matrix. Conditional covariance matrix forecasted from the BEKK model.
+#' @param level Numeric. Confidence level for VaR calculation (e.g., 0.01 for 99% VaR).
+#' @param type Numeric vector (length 3) specifying the copula types for each pair of variables:
+#'   - 1 = Normal
+#'   - 2 = Clayton
+#'   - 3 = Clayton Survival
+#'   - 4 = Gumbel
+#'   - 24 = Gumbel Survival
+#' @param par Numeric vector containing parameters from MSCMGARCH estimation:
+#'   - First two elements: transition probabilities (p, q).
+#'   - Remaining elements: copula parameters for each pairwise dependence.
+#' @param filterprobs Numeric scalar indicating the filtered probability of being in the copula-based regime at the forecasting time.
+#'
+#' @return Numeric value indicating the VaR at the specified confidence level.
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(123)
+#' simulated_3d_series <- matrix(rnorm(3000), ncol = 3)
+#'
+#' type_copula <- c(1, 2, 4) # Normal, Clayton, Gumbel
+#'
+#' estimation_result <- MLE_MSCMGARCH_3dim(r = simulated_3d_series,
+#'                                         type = matrix(type_simple, nrow=3),
+#'                                         asymmBEKK = FALSE,
+#'                                         nc = 4)
+#'
+#' H_forecast <- comp_bekk_forecast(estimation_result[[1]], simulated_3d_series)
+#'
+#' estimated_par <- estimation_result[[2]]$par
+#' filterprobs <- estimation_result[[3]][nrow(estimation_result[[3]]),]
+#'
+#' portfolio_weights <- c(0.3, 0.4, 0.3)
+#' level <- 0.01
+#'
+#' VaR_99 <- VaR_MSCMGARCH(portfolio_weights, H_forecast, level, type_simple, 
+#'                         estimated_par, filterprobs)
+#'
+#' VaR_99
+#'}
+#'
+#' @export
 VaR_MSCMGARCH<-function(portfolio_weights,H,level,type,par,filterprobs ){
   if(length(type)==3 && length(par)==5 && !is.null(filterprobs)) {
     correlation_matrix=cor_mat(par[3:5],type)
@@ -686,7 +734,66 @@ u_MSCMGARCH<-function(portfolio_weights,H,level,type,par,filterprobs,VaR,portfol
   return(u)
 } 
 
-#three regime model
+#' Value-at-Risk (VaR) Estimation for Three-Regime MSCMGARCH Models
+#'
+#' Calculates Value-at-Risk (VaR) for a portfolio using a 3-regime Markov-Switching Copula Multivariate GARCH (MSCMGARCH) model. The function considers distinct covariance and copula structures corresponding to each of the three regimes.
+#'
+#' @param portfolio_weights Numeric vector. Weights of the assets in the portfolio.
+#' @param H Numeric matrix. Forecasted covariance matrix (from BEKK forecast).
+#' @param level Numeric. Confidence level for VaR estimation (e.g., 0.01 for 99% VaR).
+#' @param type1 Numeric vector (length 3). Copula family specification for regime 1:
+#'   - 1 = Normal
+#'   - 2 = Clayton
+#'   - 3 = Clayton Survival
+#'   - 4 = Gumbel
+#'   - 24 = Gumbel Survival
+#' @param type2 Numeric vector (length 3). Copula family specification for regime 2 (same coding as type1).
+#' @param par Numeric vector. Parameters containing:
+#'   - Transition probabilities (6 elements, regime-switching probabilities)
+#'   - Copula parameters for each regime (6 elements, 3 per regime)
+#' @param filterprobs Numeric vector (length 3). Filtered probabilities (from the MSCMGARCH estimation step) indicating the probability of being in each regime at the forecasting time.
+#' @param level Numeric. Confidence level for VaR calculation (e.g., 0.01 for 99% VaR).
+#' @param H Numeric matrix. Forecasted covariance matrix for the portfolio (from the BEKK model forecast).
+#'
+#' @return Numeric value representing the VaR estimate at the given confidence level.
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(123)
+#' simulated_3d_series <- matrix(rnorm(3000), ncol = 3)
+#'
+#' # Copula family specification for each regime
+#' type1 <- c(1, 2, 4) # Normal, Clayton, Gumbel
+#' type2 <- c(4, 2, 1) # Gumbel, Clayton, Normal
+#'
+#' # Example BEKK and copula estimation
+#' estimation_result <- MLE_MSCMGARCH_3dim(r = simulated_3d_series,
+#'                                         type = matrix(type1, nrow=3),
+#'                                         asymmBEKK = FALSE,
+#'                                         nc = 4)
+#'
+#' # One-step-ahead forecast
+#' H_forecast <- comp_bekk_forecast(estimation_result[[1]], simulated_3d_series)
+#'
+#' # Portfolio weights
+#' portfolio_weights <- c(0.3, 0.4, 0.3)
+#'
+#' # Filtered regime probabilities from estimation
+#' filterprobs <- estimation_result[[3]][nrow(estimation_result[[3]]), ]
+#'
+#' # Parameters extracted from estimation
+#' estimated_par <- c(0.8, 0.1, 0.1, 0.8, 0.1, 0.1, 2, 2, 2, 3, 2.5, 2.5)
+#'
+#' # VaR estimation
+#' VaR_99 <- VaR_MSCMGARCH_3(portfolio_weights, H_forecast, 0.01,
+#'                           type1 = type1, type2 = type1,
+#'                           par = estimated_par,
+#'                           filterprobs = filterprobs)
+#'
+#' VaR_99
+#'}
+#'
+#' @export
 VaR_MSCMGARCH_3<-function(portfolio_weights,H,level,type1,type2,par,filterprobs ){
     p1t = filterprobs[1]
     p2t = filterprobs[2]
